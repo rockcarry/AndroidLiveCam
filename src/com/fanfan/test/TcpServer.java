@@ -28,7 +28,7 @@ public class TcpServer extends Thread {
                 client = mTcpServerSocket.accept();
                 os     = client.getOutputStream();
                 while (!mExit) {
-                    byte[] out = mH264Encoder.dequeueOutputBuffer(1000 * 1000);
+                    byte[] out = mH264Encoder.dequeueOutputBuffer(100 * 1000);
                     if (out != null) {
                         Log.d(TAG, "get h264 buffer: " + out + ", len: " + out.length);
                         os.write(out);

@@ -37,6 +37,7 @@ public class CameraTestActivity extends Activity
 
         mH264Enc = new H264HwEncoder();
         mH264Enc.init(CAMERA_VIDEO_WIDTH, CAMERA_VIDEO_HEIGHT, 25, 256*1024);
+
         mServer  = new TcpServer(8000, mH264Enc);
         mServer.start();
     }
@@ -45,9 +46,19 @@ public class CameraTestActivity extends Activity
     public void onDestroy() {
         Log.d(TAG, "onDestroy");
         super.onDestroy();
-        mServer.close();
-        mH264Enc.free();
-        mCamDev.release();
+        if (mServer != null) {
+            mServer.close();
+            mServer = null;
+        }
+        if (mH264Enc != null) {
+            mH264Enc.free();
+            mH264Enc = null;
+        }
+        if (mCamDev != null) {
+            mCamDev.stopPreview();
+            mCamDev.release();
+            mCamDev = null;
+        }
     }
 
     @Override
@@ -66,7 +77,7 @@ public class CameraTestActivity extends Activity
         public void onPreviewFrame(byte[] data, Camera camera) {
 //          Log.d(TAG, "onPreviewFrame");
             camera.addCallbackBuffer(mPreviewBuf);
-            mH264Enc.enqueueInputBuffer(data, 0, 1000 * 1000);
+            if (mH264Enc != null) mH264Enc.enqueueInputBuffer(data, 0, 100 * 1000);
         }
     };
 
@@ -80,13 +91,13 @@ public class CameraTestActivity extends Activity
                 mCamDev.addCallbackBuffer(mPreviewBuf);
                 mCamDev.setPreviewCallbackWithBuffer(mPreviewCallback);
                 mCamDev.startPreview();
-            } catch (Exception e) {}
+            } catch (Exception e) { e.printStackTrace(); }
         }
 
         @Override
         public void surfaceDestroyed(SurfaceHolder holder) {
             Log.d(TAG, "surfaceDestroyed");
-            mCamDev.stopPreview();
+            if (mCamDev != null) mCamDev.stopPreview();
         }
 
         @Override
